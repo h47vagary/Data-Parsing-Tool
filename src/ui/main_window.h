@@ -1,0 +1,37 @@
+#pragma once
+
+#include <QMainWindow>
+#include <QList>
+#include <QPushButton>
+#include <QLabel>
+#include <QMap>
+#include <QVector>
+#include <QTimer>
+
+
+namespace Ui {
+    class MainWindow;
+}
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    explicit MainWindow(QWidget  *parent = nullptr);
+    ~MainWindow();
+
+private slots:
+
+public slots:
+
+signals:
+
+private:
+    Ui::MainWindow *ui;
+
+private:
+
+public:
+
+};

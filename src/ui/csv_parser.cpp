@@ -4,8 +4,6 @@
 #include <sstream>
 #include <chrono>
 
-#include "filter.h"
-
 CSVParserWindow::CSVParserWindow(QWidget *parent)
 {
     std::cout << __FUNCTION__ << std::endl;
@@ -155,7 +153,11 @@ void CSVParserWindow::loadData(const std::string &filename, bool is_filtering)
     {
         std::istringstream ss(line);
         std::string token;
-        CartesianPose pose;
+        // struct CartesianPose
+        // [
+            
+        // ];
+        // CartesianPose pose;
         double in_x, in_y, in_z, in_a, in_b, in_c;
 
         // 依次读取6个字段
@@ -187,9 +189,9 @@ void CSVParserWindow::loadData(const std::string &filename, bool is_filtering)
 
     if (is_filtering)
     {
-        std::unique_ptr<IPoseFilter> pose_filter = std::make_unique<MovingAverageFilter>(filter_window_size_);
-        pose_filter->set_filter_param(11);
-        pose_filter->filter_xyzabc(x, y, z, a, b, c);
+        // std::unique_ptr<IPoseFilter> pose_filter = std::make_unique<MovingAverageFilter>(filter_window_size_);
+        // pose_filter->set_filter_param(11);
+        // pose_filter->filter_xyzabc(x, y, z, a, b, c);
     }
 }
 

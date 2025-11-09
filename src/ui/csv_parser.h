@@ -8,8 +8,6 @@
 #include <vector>
 #include <string>
 #include "qcustomplot.h"
-#include "common_header.h"
-#include "filter.h"
 
 class CSVParserWindow : public QMainWindow {
     Q_OBJECT
