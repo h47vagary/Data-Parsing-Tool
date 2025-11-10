@@ -15,14 +15,14 @@ set(CMAKE_AUTORCC ON)
 include_directories(
     # ${PROJECT_SOURCE_DIR}/include
     # ${PROJECT_SOURCE_DIR}/src/configfile
-    # ${PROJECT_SOURCE_DIR}/src/algorithm
+    ${PROJECT_SOURCE_DIR}/src/algorithm
     # ${PROJECT_SOURCE_DIR}/src/utils
     # ${PROJECT_SOURCE_DIR}/src/communication
     # ${PROJECT_SOURCE_DIR}/lib/jsoncpp/include
 )
 
 # 添加子模块（编译为静态库）
-# add_subdirectory(src/algorithm)
+add_subdirectory(src/algorithm)
 # add_subdirectory(src/communication)
 # add_subdirectory(src/utils)
 # add_subdirectory(src/configfile)
@@ -35,7 +35,7 @@ add_executable(data_parsing_tool src/main.cpp)
 # 链接各模块静态库
 target_link_libraries(data_parsing_tool
     PRIVATE
-        # algorithm
+        algorithm
         # communication
         # htc_vive
         # utils

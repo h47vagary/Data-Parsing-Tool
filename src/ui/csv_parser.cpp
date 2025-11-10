@@ -7,6 +7,7 @@
 #include <QElapsedTimer>
 #include <cmath>
 
+#include "closest_element.h"
 
 CSVParserWindow::CSVParserWindow(QWidget *parent)
 {
@@ -82,7 +83,6 @@ CSVParserWindow::CSVParserWindow(QWidget *parent)
 CSVParserWindow::~CSVParserWindow()
 {
 }
-
 
 void CSVParserWindow::on_mouse_move(QMouseEvent *event)
 {
