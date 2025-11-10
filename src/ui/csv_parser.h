@@ -34,4 +34,9 @@ private:
     std::vector<double> x, y, z;
     std::vector<double> a, b, c;
     int filter_window_size_ = 11;
+    QCPItemText *tooltip_item_ = nullptr;
+    QCPItemLine* vertical_line_ = nullptr;  // 点击生成的竖直线
+
+private slots:
+    void on_mouse_move(QMouseEvent *event);
 };

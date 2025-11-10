@@ -31,6 +31,8 @@ private:
     Ui::MainWindow *ui;
 
 private:
+    QString last_open_dir_;
+
 
 public:
 
