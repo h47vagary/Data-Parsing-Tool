@@ -69,13 +69,22 @@ CSVParserWindow::CSVParserWindow(QWidget *parent)
             }
         });
 
-    connect(customPlot, &QCustomPlot::mousePress, this, [this](QMouseEvent *event){
-        double x_val = customPlot->xAxis->pixelToCoord(event->pos().x());
-        vertical_line_->start->setCoords(x_val, customPlot->yAxis->range().lower);
-        vertical_line_->end->setCoords(x_val, customPlot->yAxis->range().upper);
-        vertical_line_->setVisible(true);
-        customPlot->replot();
+    // 右键点击绘制竖直线
+    connect(customPlot, &QCustomPlot::mousePress, this, [this](QMouseEvent *event)
+    {
+        // 只在右键点击时响应
+        if (event->button() == Qt::RightButton)
+        {
+            double x_val = customPlot->xAxis->pixelToCoord(event->pos().x());
+
+            vertical_line_->start->setCoords(x_val, customPlot->yAxis->range().lower);
+            vertical_line_->end->setCoords(x_val, customPlot->yAxis->range().upper);
+            vertical_line_->setVisible(true);
+
+            customPlot->replot(QCustomPlot::rpQueuedReplot);
+        }
     });
+
 
 
 }
