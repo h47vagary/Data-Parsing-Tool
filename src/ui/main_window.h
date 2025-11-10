@@ -22,7 +22,7 @@ public:
     ~MainWindow();
 
 private slots:
-
+    void slot_button_press();
 public slots:
 
 signals:

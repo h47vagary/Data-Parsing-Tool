@@ -153,11 +153,6 @@ void CSVParserWindow::loadData(const std::string &filename, bool is_filtering)
     {
         std::istringstream ss(line);
         std::string token;
-        // struct CartesianPose
-        // [
-            
-        // ];
-        // CartesianPose pose;
         double in_x, in_y, in_z, in_a, in_b, in_c;
 
         // 依次读取6个字段
