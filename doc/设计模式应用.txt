@@ -1,0 +1,20 @@
+设计模式应用
+使用的设计模式
+策略模式 (Strategy Pattern): DataSource和其具体实现
+插件模式 (Plugin Pattern): PluginInterface和插件管理器
+观察者模式 (Observer Pattern): 数据更新通知机制
+工厂方法 (Factory Method): 数据源和插件的创建
+
+
+纯C++模块 (不依赖QT)
+├── data/           (数据源层)
+├── plugins/        (插件系统)  
+├── utils/          (工具类)
+└── CoreLibrary     (静态库)
+
+QT模块 (依赖QT)
+├── core/           (UI适配器)
+├── visualization/  (可视化)
+└── 主程序          (可执行文件)
+
+依赖关系: QT模块 → 纯C++模块 (单向依赖)

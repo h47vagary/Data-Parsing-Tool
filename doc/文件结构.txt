@@ -1,0 +1,114 @@
+│  .gitignore
+│  CMakeLists.txt
+│  main.cpp
+│  README.md
+│  
+├─doc
+│      插件具体实现.png
+│      插件处理流程.png
+│      数据加载和显示流程.png
+│      数据可视化组件.excalidraw
+│      数据流关系图.png
+│      数据源具体实现.png
+│      核心类图.png
+│      设计模式应用.txt
+│      
+├─include
+│  ├─core
+│  │      ApplicationConfig.h
+│  │      MainWindow.h
+│  │      
+│  ├─data
+│  │      CSVDataSource.h
+│  │      CustomDataSource.h
+│  │      DataParser.h
+│  │      DataSourceFactory.h
+│  │      RealTimeDataSource.h
+│  │      
+│  ├─plugins
+│  │      ExportPlugin.h
+│  │      FilterPlugin.h
+│  │      InterpolationPlugin.h
+│  │      PluginInterface.h
+│  │      PluginManager.h
+│  │
+│  ├─utils
+│  │      DataConverter.h
+│  │      FileUtils.h
+│  │      JsonConfig.h
+│  │
+│  └─visualization
+│          ChartManager.h
+│          InteractionHandler.h
+│          PlotWidget.h
+│
+├─lib
+│  ├─linux-x64
+│  └─windows-x64
+│      └─JsonCpp
+│          ├─debug
+│          │      libjsoncpp.a
+│          │      libjsoncpp.dll.a
+│          │
+│          └─release
+│                  libjsoncpp.a
+│                  libjsoncpp.dll.a
+│
+├─plugins
+│  ├─analysis
+│  ├─export
+│  └─filters
+├─resource
+│  ├─configs
+│  ├─icons
+│  └─styles
+├─src
+│  ├─core
+│  │      ApplicationConfig.cpp
+│  │      MainWindow.cpp
+│  │
+│  ├─data
+│  │      CSVDataSource.cpp
+│  │      CustomDataSource.cpp
+│  │      DataParser.cpp
+│  │      DataSourceFactory.cpp
+│  │      RealTimeDataSource.cpp
+│  │
+│  ├─plugins
+│  │      ExportPlugin.cpp
+│  │      FilterPlugin.cpp
+│  │      InterpolationPlugin.cpp
+│  │      PluginManager.cpp
+│  │
+│  ├─utils
+│  │      DataConverter.cpp
+│  │      FileUtils.cpp
+│  │      JsonConfig.cpp
+│  │
+│  └─visualization
+│          ChartManager.cpp
+│          InteractionHandler.cpp
+│          PlotWidget.cpp
+│
+└─thirdparty
+    ├─json
+    │  └─include
+    │          allocator.h
+    │          assertions.h
+    │          config.h
+    │          forwards.h
+    │          json.h
+    │          json_features.h
+    │          reader.h
+    │          value.h
+    │          version.h
+    │          writer.h
+    │
+    └─qcustomplot
+        ├─include
+        │      qcustomplot.h
+        │
+        └─src
+                qcustomplot.cpp
+
+PS E:\Code\Data-Parsing-Tool>

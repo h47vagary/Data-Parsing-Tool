@@ -1,0 +1,19 @@
+# 构建QCustomPlot（需要QT）
+set(QCUSTOMPLOT_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/qcustomplot/src/qcustomplot.cpp
+)
+
+add_library(qcustomplot STATIC ${QCUSTOMPLOT_SOURCES})
+
+target_include_directories(qcustomplot PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/qcustomplot/include
+)
+
+# QCustomPlot需要链接QT
+target_link_libraries(qcustomplot Qt5::Core Qt5::Widgets)
+
+# JSON库（纯C++）
+add_library(jsoncpp INTERFACE)
+target_include_directories(jsoncpp INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/json/include
+)
