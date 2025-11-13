@@ -4,12 +4,11 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
-#include <vector>
 #include <memory>
 
-// 前向声明纯C++类
+// 前向声明
 class DataSource;
-class PluginInterface;
+class DataModel;
 
 class CoreToQtAdapter : public QObject {
     Q_OBJECT
@@ -19,22 +18,19 @@ public:
     ~CoreToQtAdapter();
     
     void setDataSource(std::shared_ptr<DataSource> dataSource);
-    void setPlugin(std::shared_ptr<PluginInterface> plugin);
+    std::shared_ptr<DataModel> getCurrentData() const { return m_currentData; }
     
-    QVector<double> getData() const;
+    QVector<double> getDataAsQVector() const;
     QVector<QPair<double, double>> getDataPairs() const;
-    void processData();
-
-signals:
-    void dataReady(const QVector<double>& data);
-    void dataProcessed(const QVector<double>& result);
-    void errorOccurred(const QString& error);
 
 public slots:
     void loadCSVFile(const QString& filename);
     void startRealTimeData();
     void stopRealTimeData();
-    void applyFilter(const QString& filterType);
+
+signals:
+    void dataReady(std::shared_ptr<DataModel> data);
+    void errorOccurred(const QString& error);
 
 private slots:
     void handleDataReady();
@@ -42,8 +38,7 @@ private slots:
 
 private:
     std::shared_ptr<DataSource> m_dataSource;
-    std::shared_ptr<PluginInterface> m_currentPlugin;
-    std::vector<double> m_currentData;
+    std::shared_ptr<DataModel> m_currentData;
 };
 
 #endif // CORETOQTADAPTER_H

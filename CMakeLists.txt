@@ -15,6 +15,11 @@ set(CMAKE_AUTORCC ON)
 # 包含目录 - 纯C++模块
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/core
+    ${CMAKE_SOURCE_DIR}/include/data
+    ${CMAKE_SOURCE_DIR}/include/plugins
+    ${CMAKE_SOURCE_DIR}/include/utils
+    ${CMAKE_SOURCE_DIR}/include/visualization
     ${CMAKE_SOURCE_DIR}/thirdparty/qcustomplot/include
     ${CMAKE_SOURCE_DIR}/thirdparty/json/include
 )
@@ -44,6 +49,9 @@ add_library(CoreLibrary STATIC ${CORE_SOURCES})
 target_include_directories(CoreLibrary PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(CoreLibrary PUBLIC CORE_LIBRARY)
 
+# 为纯C++模块移除QT依赖
+target_compile_definitions(CoreLibrary PUBLIC -DNO_QT_DEPENDENCIES)
+
 # 生成MOC文件（仅UI相关）
 qt5_wrap_cpp(MOC_SOURCES 
     include/core/MainWindow.h
@@ -66,5 +74,9 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Widgets
 )
 
-# 为纯C++模块移除QT依赖
-target_compile_definitions(CoreLibrary PUBLIC -DNO_QT_DEPENDENCIES)
+# 设置输出目录
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+)

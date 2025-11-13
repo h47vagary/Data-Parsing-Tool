@@ -6,7 +6,6 @@
 #include <memory>
 #include <functional>
 
-// 纯C++数据源基类
 class DataSource {
 public:
     enum class State { Stopped, Running, Error };

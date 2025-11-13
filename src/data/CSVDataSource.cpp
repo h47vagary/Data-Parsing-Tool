@@ -2,11 +2,12 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <memory>
 
-CSVDataSource::CSVDataSource() : m_delimiter(','), m_hasHeader(false) {}
+CSVDataSource::CSVDataSource() 
+    : m_delimiter(','), m_state(State::Stopped), m_dataModel(std::make_shared<DataModel>()) {}
 
 bool CSVDataSource::initialize(const std::string& config) {
-    // 解析配置，这里简化处理
     m_filename = config;
     return true;
 }
@@ -19,30 +20,46 @@ bool CSVDataSource::start() {
         }
         return false;
     }
+
+    m_dataModel->clear();
     
     std::string line;
-    m_data.clear();
-    
-    // 读取数据
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string value;
-        std::vector<double> row;
-        
-        while (std::getline(ss, value, m_delimiter)) {
-            try {
-                row.push_back(std::stod(value));
-            } catch (const std::exception& e) {
-                // 忽略转换错误
-            }
+    // 跳过标题行
+    if (!std::getline(file, line)) {
+        if (m_errorCallback) {
+            m_errorCallback("文件为空或读取失败: " + m_filename);
         }
-        
-        if (!row.empty()) {
-            m_data.insert(m_data.end(), row.begin(), row.end());
-        }
+        return false;
     }
-    
+
+    while (std::getline(file, line)) {
+        std::istringstream ss(line);
+        std::string token;
+        double in_x, in_y, in_z, in_a, in_b, in_c;
+
+        if (!std::getline(ss, token, m_delimiter)) continue;
+        if (!parseDouble(token, in_x)) continue;
+
+        if (!std::getline(ss, token, m_delimiter)) continue;
+        if (!parseDouble(token, in_y)) continue;
+
+        if (!std::getline(ss, token, m_delimiter)) continue;
+        if (!parseDouble(token, in_z)) continue;
+
+        if (!std::getline(ss, token, m_delimiter)) continue;
+        if (!parseDouble(token, in_a)) continue;
+
+        if (!std::getline(ss, token, m_delimiter)) continue;
+        if (!parseDouble(token, in_b)) continue;
+
+        if (!std::getline(ss, token, m_delimiter)) continue;
+        if (!parseDouble(token, in_c)) continue;
+
+        m_dataModel->addPoint(in_x, in_y, in_z, in_a, in_b, in_c);
+    }
+
     file.close();
+    m_state = State::Running;
     
     if (m_dataReadyCallback) {
         m_dataReadyCallback();
@@ -52,9 +69,20 @@ bool CSVDataSource::start() {
 }
 
 void CSVDataSource::stop() {
-    m_data.clear();
+    m_dataModel->clear();
+    m_state = State::Stopped;
 }
 
 std::vector<double> CSVDataSource::getData() {
-    return m_data;
+    return m_dataModel->getX(); // 返回X坐标数据作为示例
+}
+
+bool CSVDataSource::parseDouble(const std::string& str, double& value) {
+    try {
+        size_t pos;
+        value = std::stod(str, &pos);
+        return pos == str.length();
+    } catch (const std::exception&) {
+        return false;
+    }
 }

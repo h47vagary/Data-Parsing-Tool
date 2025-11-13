@@ -1,7 +1,7 @@
 #include "CoreToQtAdapter.h"
 #include "data/DataSource.h"
 #include "data/DataSourceFactory.h"
-#include "plugins/PluginInterface.h"
+#include "data/DataModel.h"
 #include <QDebug>
 
 CoreToQtAdapter::CoreToQtAdapter(QObject* parent) 
@@ -10,6 +10,9 @@ CoreToQtAdapter::CoreToQtAdapter(QObject* parent)
 }
 
 CoreToQtAdapter::~CoreToQtAdapter() {
+    if (m_dataSource) {
+        m_dataSource->stop();
+    }
 }
 
 void CoreToQtAdapter::setDataSource(std::shared_ptr<DataSource> dataSource) {
@@ -34,22 +37,22 @@ void CoreToQtAdapter::loadCSVFile(const QString& filename) {
     auto& factory = DataSourceFactory::getInstance();
     auto source = factory.createCSVSource(filename.toStdString());
     
-    if (source && source->initialize(filename.toStdString())) {
+    if (source) {
         setDataSource(source);
         if (source->start()) {
             qDebug() << "CSV文件加载成功:" << filename;
+        } else {
+            emit errorOccurred("文件加载失败: " + filename);
         }
+    } else {
+        emit errorOccurred("创建数据源失败");
     }
 }
 
 void CoreToQtAdapter::handleDataReady() {
-    if (m_dataSource) {
-        m_currentData = m_dataSource->getData();
-        QVector<double> qtData;
-        for (double value : m_currentData) {
-            qtData.append(value);
-        }
-        emit dataReady(qtData);
+    if (auto csvSource = std::dynamic_pointer_cast<CSVDataSource>(m_dataSource)) {
+        m_currentData = csvSource->getDataModel();
+        emit dataReady(m_currentData);
     }
 }
 
@@ -57,10 +60,13 @@ void CoreToQtAdapter::handleError(const std::string& error) {
     emit errorOccurred(QString::fromStdString(error));
 }
 
-QVector<double> CoreToQtAdapter::getData() const {
+QVector<double> CoreToQtAdapter::getDataAsQVector() const {
     QVector<double> result;
-    for (double value : m_currentData) {
-        result.append(value);
+    if (m_currentData) {
+        const auto& data = m_currentData->getX(); // 以X数据为例
+        for (double value : data) {
+            result.append(value);
+        }
     }
     return result;
 }

@@ -2,7 +2,8 @@
 #define CSVDATASOURCE_H
 
 #include "DataSource.h"
-#include <vector>
+#include "DataModel.h"
+#include <memory>
 #include <string>
 
 class CSVDataSource : public DataSource {
@@ -16,13 +17,14 @@ public:
     State getState() const override { return m_state; }
     
     std::vector<double> getData() override;
-    bool hasNewData() const override { return !m_data.empty(); }
+    bool hasNewData() const override { return m_dataModel && !m_dataModel->empty(); }
 
 private:
+    bool parseDouble(const std::string& str, double& value);
+
     std::string m_filename;
     char m_delimiter;
-    bool m_hasHeader;
-    std::vector<double> m_data;
+    std::shared_ptr<DataModel> m_dataModel;
     State m_state;
 };
 
