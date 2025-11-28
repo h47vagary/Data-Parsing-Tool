@@ -18,7 +18,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/core
     ${CMAKE_SOURCE_DIR}/include/data
     ${CMAKE_SOURCE_DIR}/include/plugins
-    ${CMAKE_SOURCE_DIR}/include/utils
     ${CMAKE_SOURCE_DIR}/include/visualization
     ${CMAKE_SOURCE_DIR}/thirdparty/qcustomplot/include
     ${CMAKE_SOURCE_DIR}/thirdparty/json/include
@@ -28,7 +27,6 @@ include_directories(
 file(GLOB_RECURSE CORE_SOURCES 
     "src/data/*.cpp"
     "src/plugins/*.cpp" 
-    "src/utils/*.cpp"
 )
 
 # UI相关源文件
