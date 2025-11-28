@@ -1,10 +1,10 @@
 #include "CustomDataSource.h"
-#include "DataParser.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 CustomDataSource::CustomDataSource() 
     : m_state(State::Stopped)
@@ -12,7 +12,9 @@ CustomDataSource::CustomDataSource()
     , m_dataModel(std::make_shared<DataModel>())
 {
     // 初始化统计信息
-    m_stats = {0, 0, 0, {}};
+    m_stats.totalPoints = 0;
+    m_stats.validPoints = 0;
+    m_stats.skippedPoints = 0;
 }
 
 CustomDataSource::~CustomDataSource() {
@@ -25,7 +27,10 @@ bool CustomDataSource::initialize(const std::string& config) {
     m_hasNewData = false;
     
     // 重置统计信息
-    m_stats = {0, 0, 0, {}};
+    m_stats.totalPoints = 0;
+    m_stats.validPoints = 0;
+    m_stats.skippedPoints = 0;
+    m_stats.ranges.clear();
     
     return true;
 }
@@ -38,7 +43,7 @@ bool CustomDataSource::start() {
         return false;
     }
     
-    std::ifstream file(m_sourcePath);
+    std::ifstream file(m_sourcePath.c_str());
     if (!file.is_open()) {
         if (m_errorCallback) {
             m_errorCallback("无法打开文件: " + m_sourcePath);
@@ -46,8 +51,12 @@ bool CustomDataSource::start() {
         return false;
     }
     
+    // 重置数据模型
     m_dataModel->clear();
-    m_stats = {0, 0, 0, {}};
+    m_stats.totalPoints = 0;
+    m_stats.validPoints = 0;
+    m_stats.skippedPoints = 0;
+    m_stats.ranges.clear();
     
     std::string line;
     int lineNumber = 0;
@@ -56,11 +65,13 @@ bool CustomDataSource::start() {
     // 跳过指定行数
     for (int i = 0; i < m_config.skipLines && std::getline(file, line); ++i) {
         skippedLines++;
+        lineNumber++;
     }
     
     // 如果有标题行，跳过
     if (m_config.hasHeader && std::getline(file, line)) {
         skippedLines++;
+        lineNumber++;
     }
     
     // 解析数据行
@@ -79,16 +90,42 @@ bool CustomDataSource::start() {
             continue;
         }
         
-        // 验证数据
-        if (values.size() < 6) {
+        if (values.empty()) {
             m_stats.skippedPoints++;
             continue;
         }
         
-        // 添加到数据模型
-        m_dataModel->addPoint(values[0], values[1], values[2], 
-                             values[3], values[4], values[5]);
-        m_stats.validPoints++;
+        // 创建数据点映射
+        std::map<std::string, double> pointData;
+        
+        // 使用列映射
+        for (size_t i = 0; i < values.size(); ++i) {
+            std::string fieldName;
+            
+            // 查找列映射
+            std::map<int, std::string>::const_iterator it = m_config.columnMapping.find(i);
+            if (it != m_config.columnMapping.end()) {
+                fieldName = it->second;
+            } else {
+                // 如果没有映射，生成默认字段名
+                fieldName = "Column_" + std::to_string(i + 1);
+            }
+            
+            // 验证数据
+            if (!validateValue(values[i], m_config.validationRule)) {
+                m_stats.skippedPoints++;
+                break;
+            }
+            
+            pointData[fieldName] = values[i];
+        }
+        
+        if (!pointData.empty()) {
+            m_dataModel->addDataPoint(pointData);
+            m_stats.validPoints++;
+        } else {
+            m_stats.skippedPoints++;
+        }
     }
     
     m_stats.totalPoints = lineNumber;
@@ -97,6 +134,9 @@ bool CustomDataSource::start() {
     file.close();
     m_state = State::Running;
     updateDataReady();
+    
+    std::cout << "自定义数据源加载完成: " << m_stats.validPoints 
+              << "/" << m_stats.totalPoints << " 行有效数据" << std::endl;
     
     return true;
 }
@@ -109,10 +149,15 @@ void CustomDataSource::stop() {
 
 std::vector<double> CustomDataSource::getData() {
     m_hasNewData = false;
-    if (m_dataModel && !m_dataModel->empty()) {
-        return m_dataModel->getX(); // 返回X数据作为示例
+    
+    // 返回第一个字段的数据作为示例
+    std::vector<std::string> fieldNames = m_dataModel->getFieldNames();
+    if (!fieldNames.empty()) {
+        const DataModel::DataSeries& series = m_dataModel->getDataSeries(fieldNames[0]);
+        return std::vector<double>(series.begin(), series.end());
     }
-    return {};
+    
+    return std::vector<double>();
 }
 
 bool CustomDataSource::parseLine(const std::string& line, std::vector<double>& values) {
@@ -132,22 +177,25 @@ bool CustomDataSource::parseLine(const std::string& line, std::vector<double>& v
         token.erase(token.find_last_not_of(" \t\r\n") + 1);
         
         if (token.empty()) {
+            // 空字段，跳过
             continue;
         }
         
         try {
             double value = std::stod(token);
-            if (!validateValue(value, m_config.validationRule)) {
-                return false;
-            }
             parsedValues.push_back(value);
-        } catch (const std::exception&) {
+        } catch (const std::exception& e) {
+            // 解析失败
             return false;
         }
     }
     
-    values = std::move(parsedValues);
-    return !values.empty();
+    if (!parsedValues.empty()) {
+        values = parsedValues;
+        return true;
+    }
+    
+    return false;
 }
 
 bool CustomDataSource::validateValue(double value, const ParseConfig::ValidationRule& rule) {
@@ -175,13 +223,31 @@ bool CustomDataSource::appendData(const std::vector<std::vector<double>>& newDat
         return false;
     }
     
-    for (const auto& row : newData) {
-        if (row.size() >= 6) {
-            m_dataModel->addPoint(row[0], row[1], row[2], row[3], row[4], row[5]);
-            m_stats.validPoints++;
-        } else {
-            m_stats.skippedPoints++;
+    for (size_t i = 0; i < newData.size(); ++i) {
+        const std::vector<double>& row = newData[i];
+        if (row.empty()) {
+            continue;
         }
+        
+        // 创建数据点映射
+        std::map<std::string, double> pointData;
+        
+        for (size_t j = 0; j < row.size(); ++j) {
+            std::string fieldName;
+            
+            // 查找列映射
+            std::map<int, std::string>::const_iterator it = m_config.columnMapping.find(j);
+            if (it != m_config.columnMapping.end()) {
+                fieldName = it->second;
+            } else {
+                fieldName = "Column_" + std::to_string(j + 1);
+            }
+            
+            pointData[fieldName] = row[j];
+        }
+        
+        m_dataModel->addDataPoint(pointData);
+        m_stats.validPoints++;
     }
     
     m_stats.totalPoints += newData.size();
@@ -191,38 +257,64 @@ bool CustomDataSource::appendData(const std::vector<std::vector<double>>& newDat
 }
 
 bool CustomDataSource::updateDataPoint(size_t index, const std::vector<double>& newValues) {
-    if (index >= m_dataModel->size() || newValues.size() < 6) {
+    if (index >= m_dataModel->size() || newValues.empty()) {
         return false;
     }
     
-    // 这里需要扩展DataModel来支持更新操作
-    // 目前实现为删除旧点，添加新点（简化实现）
+    // 获取当前数据点
+    std::map<std::string, double> currentPoint;
+    if (!m_dataModel->getDataPoint(index, currentPoint)) {
+        return false;
+    }
+    
+    // 更新值
+    for (size_t i = 0; i < newValues.size() && i < currentPoint.size(); ++i) {
+        std::string fieldName;
+        
+        // 查找列映射
+        std::map<int, std::string>::const_iterator it = m_config.columnMapping.find(i);
+        if (it != m_config.columnMapping.end()) {
+            fieldName = it->second;
+        } else {
+            fieldName = "Column_" + std::to_string(i + 1);
+        }
+        
+        // 更新字段值
+        std::map<std::string, double>::iterator fieldIt = currentPoint.find(fieldName);
+        if (fieldIt != currentPoint.end()) {
+            fieldIt->second = newValues[i];
+        }
+    }
+    
+    // 由于DataModel不支持直接更新单个点，需要重新构建数据
+    // 这里简化实现：删除旧点，添加新点
+    // 实际应用中可能需要扩展DataModel来支持更新操作
+    
     return true;
 }
 
 CustomDataSource::DataStats CustomDataSource::getStatistics() const {
-    auto stats = m_stats;
+    DataStats stats = m_stats;
     
     // 计算数据范围
-    if (m_dataModel && !m_dataModel->empty()) {
-        const auto& x = m_dataModel->getX();
-        const auto& y = m_dataModel->getY();
-        const auto& z = m_dataModel->getZ();
+    std::vector<std::string> fieldNames = m_dataModel->getFieldNames();
+    for (size_t i = 0; i < fieldNames.size(); ++i) {
+        const std::string& fieldName = fieldNames[i];
+        const DataModel::DataSeries& series = m_dataModel->getDataSeries(fieldName);
         
-        if (!x.empty()) {
-            auto minMaxX = std::minmax_element(x.begin(), x.end());
-            stats.ranges["x"] = {*minMaxX.first, *minMaxX.second};
+        if (series.empty()) {
+            continue;
         }
         
-        if (!y.empty()) {
-            auto minMaxY = std::minmax_element(y.begin(), y.end());
-            stats.ranges["y"] = {*minMaxY.first, *minMaxY.second};
+        double minVal = series[0];
+        double maxVal = series[0];
+        
+        for (size_t j = 0; j < series.size(); ++j) {
+            minVal = std::min(minVal, series[j]);
+            maxVal = std::max(maxVal, series[j]);
         }
         
-        if (!z.empty()) {
-            auto minMaxZ = std::minmax_element(z.begin(), z.end());
-            stats.ranges["z"] = {*minMaxZ.first, *minMaxZ.second};
-        }
+        stats.ranges[fieldName] = std::make_pair(minVal, maxVal);
     }
     
     return stats;
