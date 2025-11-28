@@ -1,6 +1,8 @@
 #include "CoreToQtAdapter.h"
 #include "data/DataSource.h"
 #include "data/DataSourceFactory.h"
+#include "data/CSVDataSource.h"
+#include "data/RealTimeDataSource.h"
 #include "data/DataModel.h"
 #include "plugins/PluginManager.h"
 #include "plugins/PluginInterface.h"

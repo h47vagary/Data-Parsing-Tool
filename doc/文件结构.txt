@@ -53,11 +53,6 @@
 │          └─release
 │                  libjsoncpp.a
 │                  libjsoncpp.dll.a
-│
-├─plugins
-│  ├─analysis
-│  ├─export
-│  └─filters
 ├─resource
 │  ├─configs
 │  ├─icons
