@@ -85,5 +85,3 @@ private:
     bool checkConsistency() const;
     static DataSeries s_emptySeries; // 静态空数据，用于返回引用
 };
-
-#endif // DATAMODEL_H
